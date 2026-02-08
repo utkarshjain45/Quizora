@@ -3,16 +3,11 @@ spring:
     name: Quizora
   profiles:
     active: local
-
-server:
-  port: 8080
-
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -21,8 +16,10 @@ server:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-application:
-  security:
-    jwt:
-      SECRET_KEY: ${JWT_SECRET}
-      expiration: ${JWT_EXPIRATION}
+server:
+  port: 8080
+
+security:
+  jwt:
+    secret-key: ${JWT_SECRET}
+    expiration-time: ${JWT_EXPIRATION}

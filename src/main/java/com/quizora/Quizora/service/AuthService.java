@@ -6,6 +6,7 @@ import com.quizora.Quizora.dao.SignUpRequest;
 import com.quizora.Quizora.model.User;
 import com.quizora.Quizora.repository.UserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,15 +14,17 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public AuthResponse createUser(SignUpRequest signUpRequest){
         User user = User.builder()
                 .name(signUpRequest.getName())
                 .email(signUpRequest.getEmail())
-                .password(signUpRequest.getPassword())
+                .password(passwordEncoder.encode(signUpRequest.getPassword()))
                 .build();
         userRepository.save(user);
-        String token = "User Created";
+        String token = jwtService.generateToken(user);
         return new AuthResponse(token);
     }
 
@@ -30,7 +33,7 @@ public class AuthService {
         if (user == null){
             return new AuthResponse("User Not Found");
         }
-        String token = "";
+        String token = jwtService.generateToken(user);
         return new AuthResponse(token);
     }
 }
