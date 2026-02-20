@@ -23,3 +23,7 @@ security:
   jwt:
     secret-key: ${JWT_SECRET}
     expiration-time: ${JWT_EXPIRATION}
+
+# Optional: override for production (comma-separated origins)
+# cors:
+#   allowed-origins: https://yourapp.com,https://www.yourapp.com
