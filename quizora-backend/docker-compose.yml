@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  quizora-backend:
+    image: utkarshjain45/quizora-backend:latest
+    container_name: quizora-backend
+    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://quizora-db:5432/quizora-db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+
+      JWT_SECRET: bZ1C/BhnIVRROhmEch4+xyoc1wc/aI9z1J1+gxRp5qACifGl3iVz3DczLoCZz382pFsjzlXwnLvMzKaf8sPjyA==
+      JWT_EXPIRATION: 86400000
+      FRONTEND_URL: http://localhost:5173
+
+    ports:
+      - "8080:8080"
+    depends_on:
+      - quizora-db
+    networks:
+      - quizora-network
+
+  quizora-db:
+    image: postgres:16-alpine
+    container_name: quizora-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: quizora-db
+    ports:
+      - "5440:5432"
+    volumes:
+      - quizora-db-data:/var/lib/postgresql/data
+    networks:
+      - quizora-network
+
+volumes:
+  quizora-db-data:
+
+networks:
+  quizora-network:
+    driver: bridge
