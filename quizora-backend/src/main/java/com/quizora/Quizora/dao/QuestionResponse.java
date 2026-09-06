@@ -16,5 +16,6 @@ public class QuestionResponse {
     private UUID id;
     private String questionText;
     private List<String> options;
+    private Integer points;
 }
 

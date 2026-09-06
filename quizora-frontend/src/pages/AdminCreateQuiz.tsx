@@ -248,8 +248,7 @@ export function AdminCreateQuiz() {
       if (typeof q.correctAnswerIndex === "number") {
         if (q.correctAnswerIndex < 0 || q.correctAnswerIndex >= options.length) {
           throw new Error(
-            `Question ${idx + 1}: 'correctAnswerIndex' (${q.correctAnswerIndex}) must be between 0 and ${
-              options.length - 1
+            `Question ${idx + 1}: 'correctAnswerIndex' (${q.correctAnswerIndex}) must be between 0 and ${options.length - 1
             }.`
           );
         }
@@ -468,11 +467,10 @@ export function AdminCreateQuiz() {
                 <button
                   type="button"
                   onClick={() => setActiveTab("manual")}
-                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                    activeTab === "manual"
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${activeTab === "manual"
                       ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   <PencilLine className="w-4 h-4" />
                   Manual Entry
@@ -480,11 +478,10 @@ export function AdminCreateQuiz() {
                 <button
                   type="button"
                   onClick={() => setActiveTab("upload")}
-                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                    activeTab === "upload"
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${activeTab === "upload"
                       ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   <UploadCloud className="w-4 h-4" />
                   Upload JSON
@@ -526,11 +523,10 @@ export function AdminCreateQuiz() {
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                   onClick={() => fileInputRef.current?.click()}
-                  className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-3 ${
-                    isDragging
+                  className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-3 ${isDragging
                       ? "border-primary bg-primary/10 scale-[1.01]"
                       : "border-border hover:border-primary/50 hover:bg-muted/40 bg-muted/20"
-                  }`}
+                    }`}
                 >
                   <input
                     ref={fileInputRef}
@@ -699,11 +695,10 @@ export function AdminCreateQuiz() {
                                   {q.options.map((opt, optIdx) => (
                                     <div
                                       key={optIdx}
-                                      className={`px-2 py-1 rounded text-[11px] flex items-center gap-1.5 ${
-                                        optIdx === q.correctAnswerIndex
+                                      className={`px-2 py-1 rounded text-[11px] flex items-center gap-1.5 ${optIdx === q.correctAnswerIndex
                                           ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-medium border border-emerald-500/30"
                                           : "bg-background/80 text-muted-foreground border border-border/50"
-                                      }`}
+                                        }`}
                                     >
                                       <span className="opacity-70 font-mono">
                                         {String.fromCharCode(65 + optIdx)}.
@@ -760,7 +755,7 @@ export function AdminCreateQuiz() {
                     Your JSON file can either be a full quiz object or an array of questions.
                   </p>
                   <pre className="p-2.5 rounded-lg bg-background border border-border text-[11px] overflow-x-auto font-mono text-foreground/90">
-{`{
+                    {`{
   "code": "QUIZ001",
   "title": "JavaScript Basics",
   "description": "Optional short summary",

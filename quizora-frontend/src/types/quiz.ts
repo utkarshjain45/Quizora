@@ -2,6 +2,7 @@ export interface Question {
   id: string;
   questionText: string;
   options: string[];
+  points?: number;
 }
 
 export interface Quiz {
@@ -54,8 +55,10 @@ export interface QuestionAnalysis {
   selectedOption: number | null;
   correctAnswerIndex: number;
   points: number;
-  isCorrect: boolean;
-  isUnattempted: boolean;
+  isCorrect?: boolean;
+  correct?: boolean;
+  isUnattempted?: boolean;
+  unattempted?: boolean;
 }
 
 export interface QuizAnalysisResponse {

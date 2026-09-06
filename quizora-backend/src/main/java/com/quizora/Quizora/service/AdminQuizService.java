@@ -49,6 +49,7 @@ public class AdminQuizService {
                                 .id(q.getId())
                                 .questionText(q.getQuestionText())
                                 .options(q.getOptions())
+                                .points(q.getPoints())
                                 .build())
                         .collect(Collectors.toList()))
                 .build();

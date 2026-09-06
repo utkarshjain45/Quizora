@@ -31,6 +31,7 @@ public class QuizService {
                         .id(question.getId())
                         .questionText(question.getQuestionText())
                         .options(question.getOptions())
+                        .points(question.getPoints())
                         .build())
                 .collect(Collectors.toList());
 

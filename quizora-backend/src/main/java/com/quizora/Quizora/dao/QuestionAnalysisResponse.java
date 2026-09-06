@@ -1,5 +1,6 @@
 package com.quizora.Quizora.dao;
- 
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +20,30 @@ public class QuestionAnalysisResponse {
     private Integer selectedOption; // null if unattempted
     private Integer correctAnswerIndex;
     private Integer points;
+
+    @JsonProperty("isCorrect")
     private boolean isCorrect;
+
+    @JsonProperty("isUnattempted")
     private boolean isUnattempted;
+
+    @JsonProperty("isCorrect")
+    public boolean isCorrect() {
+        return isCorrect;
+    }
+
+    @JsonProperty("isCorrect")
+    public void setIsCorrect(boolean isCorrect) {
+        this.isCorrect = isCorrect;
+    }
+
+    @JsonProperty("isUnattempted")
+    public boolean isUnattempted() {
+        return isUnattempted;
+    }
+
+    @JsonProperty("isUnattempted")
+    public void setIsUnattempted(boolean isUnattempted) {
+        this.isUnattempted = isUnattempted;
+    }
 }

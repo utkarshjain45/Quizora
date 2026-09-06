@@ -179,13 +179,12 @@ export function QuizResult() {
           <CardContent className="space-y-6">
             <div className="text-center space-y-3 py-2">
               <div
-                className={`text-6xl sm:text-7xl font-extrabold tracking-tight ${
-                  percentage >= 75
+                className={`text-6xl sm:text-7xl font-extrabold tracking-tight ${percentage >= 75
                     ? "text-emerald-600 dark:text-emerald-400"
                     : percentage >= 40
-                    ? "text-primary"
-                    : "text-rose-600 dark:text-rose-400"
-                }`}
+                      ? "text-primary"
+                      : "text-rose-600 dark:text-rose-400"
+                  }`}
               >
                 {percentage}%
               </div>
@@ -251,8 +250,8 @@ export function QuizResult() {
                 {analysisLoading
                   ? "Loading Analysis..."
                   : showAnalysis
-                  ? "Hide Test Analysis"
-                  : "Analyze Test"}
+                    ? "Hide Test Analysis"
+                    : "Analyze Test"}
                 {showAnalysis ? (
                   <ChevronUp className="h-4 w-4 ml-1" />
                 ) : (
@@ -282,11 +281,10 @@ export function QuizResult() {
                 <button
                   type="button"
                   onClick={() => setFilter("all")}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                    filter === "all"
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filter === "all"
                       ? "bg-background text-foreground shadow-sm font-semibold"
                       : "text-muted-foreground hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   All ({analysis?.totalQuestions ?? 0})
                 </button>
@@ -294,11 +292,10 @@ export function QuizResult() {
                 <button
                   type="button"
                   onClick={() => setFilter("wrong")}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${
-                    filter === "wrong"
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${filter === "wrong"
                       ? "bg-rose-500 text-white shadow-sm font-semibold"
                       : "text-rose-600 dark:text-rose-400 hover:bg-rose-500/10"
-                  }`}
+                    }`}
                 >
                   <XCircle className="h-3.5 w-3.5" />
                   Wrong ({analysis?.wrongCount ?? 0})
@@ -307,11 +304,10 @@ export function QuizResult() {
                 <button
                   type="button"
                   onClick={() => setFilter("correct")}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${
-                    filter === "correct"
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${filter === "correct"
                       ? "bg-emerald-600 text-white shadow-sm font-semibold"
                       : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
-                  }`}
+                    }`}
                 >
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   Correct ({analysis?.correctCount ?? 0})
@@ -321,11 +317,10 @@ export function QuizResult() {
                   <button
                     type="button"
                     onClick={() => setFilter("unattempted")}
-                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${
-                      filter === "unattempted"
+                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${filter === "unattempted"
                         ? "bg-amber-600 text-white shadow-sm font-semibold"
                         : "text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
-                    }`}
+                      }`}
                   >
                     <HelpCircle className="h-3.5 w-3.5" />
                     Unattempted ({analysis?.unattemptedCount ?? 0})
@@ -344,10 +339,10 @@ export function QuizResult() {
                   {filter === "wrong"
                     ? "Great job! You have no wrong answers."
                     : filter === "correct"
-                    ? "No correct answers found."
-                    : filter === "unattempted"
-                    ? "No unattempted questions."
-                    : "No questions to display."}
+                      ? "No correct answers found."
+                      : filter === "unattempted"
+                        ? "No unattempted questions."
+                        : "No questions to display."}
                 </p>
                 <Button variant="outline" size="sm" onClick={() => setFilter("all")}>
                   Show All Questions
@@ -363,13 +358,12 @@ export function QuizResult() {
                   return (
                     <Card
                       key={q.questionId}
-                      className={`border-2 shadow-sm transition-all overflow-hidden ${
-                        q.isCorrect
+                      className={`border-2 shadow-sm transition-all overflow-hidden ${q.isCorrect
                           ? "border-emerald-500/30 bg-card"
                           : q.isUnattempted
-                          ? "border-amber-500/30 bg-card"
-                          : "border-rose-500/40 bg-card ring-1 ring-rose-500/10"
-                      }`}
+                            ? "border-amber-500/30 bg-card"
+                            : "border-rose-500/40 bg-card ring-1 ring-rose-500/10"
+                        }`}
                     >
                       <CardHeader className="pb-3 border-b bg-muted/20">
                         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -465,13 +459,12 @@ export function QuizResult() {
                             >
                               <div className="flex items-center gap-3 flex-1">
                                 <span
-                                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                                    isCorrectOption
+                                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isCorrectOption
                                       ? "bg-emerald-600 text-white"
                                       : isUserSelected
-                                      ? "bg-rose-600 text-white"
-                                      : "bg-muted text-muted-foreground"
-                                  }`}
+                                        ? "bg-rose-600 text-white"
+                                        : "bg-muted text-muted-foreground"
+                                    }`}
                                 >
                                   {String.fromCharCode(65 + optIdx)}
                                 </span>

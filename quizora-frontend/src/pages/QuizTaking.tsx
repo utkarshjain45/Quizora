@@ -42,7 +42,7 @@ export function QuizTaking() {
             navigate(`/quiz/${quizCode}/result`);
             return;
           }
-        } catch (attemptError) {}
+        } catch (attemptError) { }
 
         const response = await validateQuizCode({ code: quizCode });
         setQuiz(response.data);
@@ -118,62 +118,62 @@ export function QuizTaking() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-background via-background to-secondary/30">
-    <div className="container mx-auto py-8 max-w-4xl px-4">
-      <Card className="mb-6 shadow-md border-2 border-border bg-card">
-        <CardHeader>
-          <CardTitle>{quiz.title}</CardTitle>
-          {quiz.description && (
-            <CardDescription>{quiz.description}</CardDescription>
-          )}
-        </CardHeader>
-      </Card>
+      <div className="container mx-auto py-8 max-w-4xl px-4">
+        <Card className="mb-6 shadow-md border-2 border-border bg-card">
+          <CardHeader>
+            <CardTitle>{quiz.title}</CardTitle>
+            {quiz.description && (
+              <CardDescription>{quiz.description}</CardDescription>
+            )}
+          </CardHeader>
+        </Card>
 
-      <div className="space-y-6">
-        {quiz.questions.map((question: Question, index: number) => (
-          <Card key={question.id} className="bg-card border-2 border-border shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-lg">
-                Question {index + 1} of {quiz.questions.length}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="mb-4 text-base font-medium">{question.questionText}</p>
-              <div className="space-y-3">
-                {question.options.map((option: string, optionIndex: number) => (
-                  <label
-                    key={optionIndex}
-                    className="flex items-center space-x-3 p-3 border rounded-md cursor-pointer hover:bg-accent transition-colors"
-                  >
-                    <input
-                      type="radio"
-                      name={`question-${question.id}`}
-                      value={optionIndex}
-                      checked={answers[question.id] === optionIndex}
-                      onChange={() => handleAnswerChange(question.id, optionIndex)}
-                      className="w-4 h-4"
-                    />
-                    <span className="flex-1">{option}</span>
-                  </label>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+        <div className="space-y-6">
+          {quiz.questions.map((question: Question, index: number) => (
+            <Card key={question.id} className="bg-card border-2 border-border shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg">
+                  Question {index + 1} of {quiz.questions.length}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="mb-4 text-base font-medium">{question.questionText}</p>
+                <div className="space-y-3">
+                  {question.options.map((option: string, optionIndex: number) => (
+                    <label
+                      key={optionIndex}
+                      className="flex items-center space-x-3 p-3 border rounded-md cursor-pointer hover:bg-accent transition-colors"
+                    >
+                      <input
+                        type="radio"
+                        name={`question-${question.id}`}
+                        value={optionIndex}
+                        checked={answers[question.id] === optionIndex}
+                        onChange={() => handleAnswerChange(question.id, optionIndex)}
+                        className="w-4 h-4"
+                      />
+                      <span className="flex-1">{option}</span>
+                    </label>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-      <div className="mt-8 flex justify-end gap-4">
-        <Button
-          variant="outline"
-          onClick={() => navigate("/")}
-          disabled={submitting}
-        >
-          Cancel
-        </Button>
-        <Button onClick={handleSubmit} disabled={submitting}>
-          {submitting ? "Submitting..." : "Submit Quiz"}
-        </Button>
+        <div className="mt-8 flex justify-end gap-4">
+          <Button
+            variant="outline"
+            onClick={() => navigate("/")}
+            disabled={submitting}
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={submitting}>
+            {submitting ? "Submitting..." : "Submit Quiz"}
+          </Button>
+        </div>
       </div>
-    </div>
     </div>
   );
 }
