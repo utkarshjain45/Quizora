@@ -21,8 +21,8 @@ public class CreateQuizRequest {
     public static class QuestionRequest {
         private String questionText;
         private List<String> options;
-        private Integer correctAnswerIndex; // 0-based index
-        private Integer points; // Optional, defaults to 1
+        private Integer correctAnswerIndex;
+        private Integer points;
     }
 }
 

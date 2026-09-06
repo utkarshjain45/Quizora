@@ -16,6 +16,5 @@ public class QuestionResponse {
     private UUID id;
     private String questionText;
     private List<String> options;
-    // Note: We don't include correctAnswerIndex or points in response to prevent cheating
 }
 

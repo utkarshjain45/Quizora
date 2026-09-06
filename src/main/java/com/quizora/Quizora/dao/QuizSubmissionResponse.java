@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 public class QuizSubmissionResponse {
     private Integer score;
     private Integer totalMarks;
-    private Boolean isRetake; // true if user already attempted this quiz before
+    private Boolean isRetake;
 }
 

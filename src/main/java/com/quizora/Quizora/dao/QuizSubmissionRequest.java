@@ -12,6 +12,6 @@ import java.util.UUID;
 @NoArgsConstructor
 public class QuizSubmissionRequest {
     private String quizCode;
-    private Map<UUID, Integer> answers; // questionId -> selectedOptionIndex
+    private Map<UUID, Integer> answers;
 }
 

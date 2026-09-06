@@ -1,65 +1,38 @@
 package com.quizora.Quizora.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quizora.Quizora.dao.CreateQuizRequest;
 import com.quizora.Quizora.dao.QuizResponse;
-import com.quizora.Quizora.model.Question;
-import com.quizora.Quizora.model.Quiz;
-import com.quizora.Quizora.repository.QuizRepository;
+import com.quizora.Quizora.service.AdminQuizService;
 import lombok.AllArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.UUID;
-import java.util.stream.Collectors;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/v1/admin/quiz")
 @AllArgsConstructor
 public class AdminQuizController {
 
-    private final QuizRepository quizRepository;
+    private final AdminQuizService adminQuizService;
+    private final ObjectMapper objectMapper;
 
     @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<QuizResponse> createQuiz(@RequestBody CreateQuizRequest request) {
-        Quiz quiz = Quiz.builder()
-                .code(request.getCode())
-                .title(request.getTitle())
-                .description(request.getDescription())
-                .isActive(true)
-                .build();
+        return ResponseEntity.ok(adminQuizService.createQuiz(request));
+    }
 
-        if (request.getQuestions() != null) {
-            for (CreateQuizRequest.QuestionRequest qReq : request.getQuestions()) {
-                Question question = Question.builder()
-                        .quiz(quiz)
-                        .questionText(qReq.getQuestionText())
-                        .options(qReq.getOptions())
-                        .correctAnswerIndex(qReq.getCorrectAnswerIndex())
-                        .points(qReq.getPoints() != null ? qReq.getPoints() : 1)
-                        .build();
-                quiz.getQuestions().add(question);
-            }
-        }
-
-        quiz = quizRepository.save(quiz);
-
-        QuizResponse response = QuizResponse.builder()
-                .id(quiz.getId())
-                .code(quiz.getCode())
-                .title(quiz.getTitle())
-                .description(quiz.getDescription())
-                .questions(quiz.getQuestions().stream()
-                        .map(q -> com.quizora.Quizora.dao.QuestionResponse.builder()
-                                .id(q.getId())
-                                .questionText(q.getQuestionText())
-                                .options(q.getOptions())
-                                .build())
-                        .collect(Collectors.toList()))
-                .build();
-
-        return ResponseEntity.ok(response);
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<QuizResponse> uploadQuiz(@RequestParam("file") MultipartFile file) throws IOException {
+        CreateQuizRequest request = objectMapper.readValue(file.getInputStream(), CreateQuizRequest.class);
+        return ResponseEntity.ok(adminQuizService.createQuiz(request));
     }
 }
+
 
