@@ -34,6 +34,13 @@ public class QuizController {
         return ResponseEntity.ok(attempt);
     }
 
+    @GetMapping("/{quizCode}/analysis")
+    public ResponseEntity<QuizAnalysisResponse> getQuizAnalysis(@PathVariable String quizCode) {
+        User user = getCurrentUser();
+        QuizAnalysisResponse analysis = quizService.getQuizAnalysis(quizCode, user);
+        return ResponseEntity.ok(analysis);
+    }
+
     @GetMapping("/{quizCode}/has-attempted")
     public ResponseEntity<Boolean> hasAttemptedQuiz(@PathVariable String quizCode) {
         User user = getCurrentUser();

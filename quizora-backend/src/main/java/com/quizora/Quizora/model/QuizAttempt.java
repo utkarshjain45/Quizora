@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -40,5 +42,12 @@ public class QuizAttempt {
     @Column(nullable = false)
     @Builder.Default
     private LocalDateTime attemptedAt = LocalDateTime.now();
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "quiz_attempt_answers", joinColumns = @JoinColumn(name = "attempt_id"))
+    @MapKeyColumn(name = "question_id")
+    @Column(name = "selected_option")
+    @Builder.Default
+    private Map<UUID, Integer> answers = new HashMap<>();
 }
 

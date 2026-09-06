@@ -69,6 +69,14 @@ public class QuizService {
 
         attempt.setScore(score);
         attempt.setTotalMarks(totalMarks);
+        if (attempt.getAnswers() == null) {
+            attempt.setAnswers(new java.util.HashMap<>());
+        } else {
+            attempt.getAnswers().clear();
+        }
+        if (answers != null) {
+            attempt.getAnswers().putAll(answers);
+        }
         quizAttemptRepository.save(attempt);
 
         return QuizSubmissionResponse.builder()
@@ -89,6 +97,62 @@ public class QuizService {
                 .score(attempt.getScore())
                 .totalMarks(attempt.getTotalMarks())
                 .attemptedAt(attempt.getAttemptedAt())
+                .build();
+    }
+
+    public QuizAnalysisResponse getQuizAnalysis(String quizCode, User user) {
+        Quiz quiz = quizRepository.findByCode(quizCode)
+                .orElseThrow(() -> new RuntimeException("Quiz not found"));
+
+        QuizAttempt attempt = quizAttemptRepository.findByUserAndQuiz(user, quiz)
+                .orElseThrow(() -> new RuntimeException("No attempt found for this quiz"));
+
+        Map<java.util.UUID, Integer> userAnswers = attempt.getAnswers() != null ? attempt.getAnswers() : java.util.Collections.emptyMap();
+
+        int correctCount = 0;
+        int wrongCount = 0;
+        int unattemptedCount = 0;
+
+        List<QuestionAnalysisResponse> questionAnalyses = new java.util.ArrayList<>();
+
+        for (Question question : quiz.getQuestions()) {
+            Integer selectedAnswer = userAnswers.get(question.getId());
+            boolean isCorrect = false;
+            boolean isUnattempted = (selectedAnswer == null);
+
+            if (isUnattempted) {
+                unattemptedCount++;
+            } else if (selectedAnswer.equals(question.getCorrectAnswerIndex())) {
+                isCorrect = true;
+                correctCount++;
+            } else {
+                wrongCount++;
+            }
+
+            questionAnalyses.add(QuestionAnalysisResponse.builder()
+                    .questionId(question.getId())
+                    .questionText(question.getQuestionText())
+                    .options(question.getOptions())
+                    .selectedOption(selectedAnswer)
+                    .correctAnswerIndex(question.getCorrectAnswerIndex())
+                    .points(question.getPoints())
+                    .isCorrect(isCorrect)
+                    .isUnattempted(isUnattempted)
+                    .build());
+        }
+
+        return QuizAnalysisResponse.builder()
+                .quizCode(quiz.getCode())
+                .quizTitle(quiz.getTitle())
+                .quizDescription(quiz.getDescription())
+                .score(attempt.getScore())
+                .totalMarks(attempt.getTotalMarks())
+                .attemptedAt(attempt.getAttemptedAt())
+                .totalQuestions(quiz.getQuestions().size())
+                .correctCount(correctCount)
+                .wrongCount(wrongCount)
+                .unattemptedCount(unattemptedCount)
+                .questions(questionAnalyses)
                 .build();
     }
 

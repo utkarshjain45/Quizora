@@ -47,3 +47,28 @@ export interface CreateQuizRequest {
   questions: CreateQuizQuestionRequest[];
 }
 
+export interface QuestionAnalysis {
+  questionId: string;
+  questionText: string;
+  options: string[];
+  selectedOption: number | null;
+  correctAnswerIndex: number;
+  points: number;
+  isCorrect: boolean;
+  isUnattempted: boolean;
+}
+
+export interface QuizAnalysisResponse {
+  quizCode: string;
+  quizTitle: string;
+  quizDescription: string;
+  score: number;
+  totalMarks: number;
+  attemptedAt: string;
+  totalQuestions: number;
+  correctCount: number;
+  wrongCount: number;
+  unattemptedCount: number;
+  questions: QuestionAnalysis[];
+}
+

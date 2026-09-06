@@ -5,6 +5,7 @@ import type {
   QuizSubmissionRequest,
   QuizSubmissionResponse,
   QuizAttemptResponse,
+  QuizAnalysisResponse,
   CreateQuizRequest,
 } from "@/types/quiz";
 import axios from "axios";
@@ -42,6 +43,9 @@ export const submitQuiz = (request: QuizSubmissionRequest) =>
 
 export const getQuizAttempt = (quizCode: string) =>
   api.get<QuizAttemptResponse>(`/api/v1/quiz/${quizCode}/attempt`);
+
+export const getQuizAnalysis = (quizCode: string) =>
+  api.get<QuizAnalysisResponse>(`/api/v1/quiz/${quizCode}/analysis`);
 
 export const hasAttemptedQuiz = (quizCode: string) =>
   api.get<boolean>(`/api/v1/quiz/${quizCode}/has-attempted`);
