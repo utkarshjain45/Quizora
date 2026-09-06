@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quizora.Quizora.dao.CreateQuizRequest;
 import com.quizora.Quizora.dao.QuizResponse;
 import com.quizora.Quizora.service.AdminQuizService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,11 +15,11 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/v1/admin/quiz")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AdminQuizController {
 
     private final AdminQuizService adminQuizService;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
