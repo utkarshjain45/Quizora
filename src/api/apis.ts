@@ -48,3 +48,13 @@ export const hasAttemptedQuiz = (quizCode: string) =>
 
 export const createQuiz = (request: CreateQuizRequest) =>
   api.post<Quiz>("/api/v1/admin/quiz/create", request);
+
+export const uploadQuizFile = (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  return api.post<Quiz>("/api/v1/admin/quiz/upload", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
