@@ -1,0 +1,51 @@
+{
+  "code": "JS101",
+  "title": "JavaScript Fundamentals",
+  "description": "Essential test on variables, functions, and data types in JavaScript",
+  "questions": [
+    {
+      "questionText": "What does JSON stand for?",
+      "options": [
+        "JavaScript Object Notation",
+        "JavaScript Oriented Notation",
+        "Java Standard Object Network",
+        "JavaScript Online Node"
+      ],
+      "correctAnswerIndex": 0,
+      "points": 1
+    },
+    {
+      "questionText": "Which HTTP status code signifies a successful creation of a resource?",
+      "options": [
+        "200 OK",
+        "201 Created",
+        "204 No Content",
+        "301 Moved Permanently"
+      ],
+      "correctAnswerIndex": 1,
+      "points": 2
+    },
+    {
+      "questionText": "Which keyword is used to declare a block-scoped variable in modern JavaScript?",
+      "options": [
+        "var",
+        "let",
+        "def",
+        "dim"
+      ],
+      "correctAnswerIndex": 1,
+      "points": 1
+    },
+    {
+      "questionText": "What is the return value of typeof null in JavaScript?",
+      "options": [
+        "null",
+        "undefined",
+        "object",
+        "number"
+      ],
+      "correctAnswerIndex": 2,
+      "points": 1
+    }
+  ]
+}

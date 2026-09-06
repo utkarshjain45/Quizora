@@ -1,0 +1,11 @@
+﻿# OS & Editors
+.DS_Store
+.idea/
+.vscode/
+*.local
+
+# Dependencies & Build
+**/node_modules/
+**/dist/
+**/target/
+**/.env
