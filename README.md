@@ -221,14 +221,26 @@ sequenceDiagram
 
 ---
 
-### 3. Running with Docker Compose
+### 3. Running with Docker (Backend & Database)
 
-To launch the backend along with an isolated PostgreSQL database using Docker:
+The backend is containerized and available on Docker Hub as [`utkarshjain45/quizora-backend:latest`](https://hub.docker.com/r/utkarshjain45/quizora-backend). You can run both the backend service and PostgreSQL database without installing Java or Maven locally:
 
 ```bash
 cd quizora-backend
-docker compose up --build -d
+docker compose up -d
 ```
+
+- **Backend Image:** [`utkarshjain45/quizora-backend:latest`](https://hub.docker.com/r/utkarshjain45/quizora-backend) (pulled automatically from Docker Hub)
+- **Backend API:** `http://localhost:8080`
+- **PostgreSQL Database:** `localhost:5440` (internal container port `5432`)
+
+Once the backend container is running, start the frontend locally:
+```bash
+cd quizora-frontend
+npm install
+npm run dev
+```
+Access the web app at `http://localhost:5173`.
 
 ---
 
