@@ -1,13 +1,14 @@
 import type { QuestionAiAnalysis, QuizAiAnalysisResult, WrongQuestionItem } from "@/types/ai";
 import type { QuestionAnalysis } from "@/types/quiz";
 
-const GEMINI_STORAGE_KEY = "quizora_gemini_api_key";
+// Clean up any previously stored key in localStorage to prevent key exposure
+try {
+  localStorage.removeItem("quizora_gemini_api_key");
+} catch {
+  // Ignore storage errors if any
+}
 
 export function getGeminiApiKey(): string {
-  const customKey = localStorage.getItem(GEMINI_STORAGE_KEY);
-  if (customKey && customKey.trim().length > 0) {
-    return customKey.trim();
-  }
   const envKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (envKey && typeof envKey === "string" && envKey.trim().length > 0) {
     return envKey.trim();
@@ -15,29 +16,8 @@ export function getGeminiApiKey(): string {
   return "";
 }
 
-export function setGeminiApiKey(key: string): void {
-  if (!key || key.trim().length === 0) {
-    localStorage.removeItem(GEMINI_STORAGE_KEY);
-  } else {
-    localStorage.setItem(GEMINI_STORAGE_KEY, key.trim());
-  }
-}
-
-export function clearGeminiApiKey(): void {
-  localStorage.removeItem(GEMINI_STORAGE_KEY);
-}
-
 export function hasGeminiApiKey(): boolean {
   return getGeminiApiKey().length > 0;
-}
-
-export function isEnvApiKey(): boolean {
-  const customKey = localStorage.getItem(GEMINI_STORAGE_KEY);
-  if (customKey && customKey.trim().length > 0) {
-    return false;
-  }
-  const envKey = import.meta.env.VITE_GEMINI_API_KEY;
-  return Boolean(envKey && typeof envKey === "string" && envKey.trim().length > 0);
 }
 
 /**
@@ -49,8 +29,16 @@ export function extractWrongQuestions(questions: QuestionAnalysis[]): WrongQuest
     .filter((q) => {
       // Must not be correct and must not be unattempted
       const isCorrect = q.isCorrect ?? q.correct ?? false;
-      const isUnattempted = q.isUnattempted ?? q.unattempted ?? (q.selectedOption === null || q.selectedOption === undefined);
-      return !isCorrect && !isUnattempted && q.selectedOption !== null && q.selectedOption !== undefined;
+      const isUnattempted =
+        q.isUnattempted ??
+        q.unattempted ??
+        (q.selectedOption === null || q.selectedOption === undefined);
+      return (
+        !isCorrect &&
+        !isUnattempted &&
+        q.selectedOption !== null &&
+        q.selectedOption !== undefined
+      );
     })
     .map((q) => {
       const selectedIndex = q.selectedOption ?? -1;
@@ -60,9 +48,15 @@ export function extractWrongQuestions(questions: QuestionAnalysis[]): WrongQuest
         questionText: q.questionText,
         options: q.options,
         selectedOptionIndex: selectedIndex,
-        selectedOptionText: selectedIndex >= 0 && selectedIndex < q.options.length ? q.options[selectedIndex] : "Unknown",
+        selectedOptionText:
+          selectedIndex >= 0 && selectedIndex < q.options.length
+            ? q.options[selectedIndex]
+            : "Unknown",
         correctOptionIndex: correctIndex,
-        correctOptionText: correctIndex >= 0 && correctIndex < q.options.length ? q.options[correctIndex] : "Unknown",
+        correctOptionText:
+          correctIndex >= 0 && correctIndex < q.options.length
+            ? q.options[correctIndex]
+            : "Unknown",
         points: q.points ?? 1,
       };
     });
@@ -70,6 +64,7 @@ export function extractWrongQuestions(questions: QuestionAnalysis[]): WrongQuest
 
 /**
  * Calls the Google Gemini API to analyze ONLY the wrong answers and explain the correct answers.
+ * Models: gemini-3.6-flash, fallback to gemini-3.7-flash and gemini-flash-latest.
  */
 export async function analyzeWrongAnswersWithGemini(
   wrongQuestions: WrongQuestionItem[],
@@ -77,13 +72,18 @@ export async function analyzeWrongAnswersWithGemini(
 ): Promise<QuizAiAnalysisResult> {
   const apiKey = getGeminiApiKey();
   if (!apiKey) {
-    throw new Error("GEMINI_KEY_MISSING: Please configure your Gemini API Key first.");
+    throw new Error(
+      "AI analysis is currently unavailable. VITE_GEMINI_API_KEY is not configured."
+    );
   }
 
   if (wrongQuestions.length === 0) {
     return {
       overallFeedback: "Great job! You have no wrong answers to analyze.",
-      recommendations: ["Keep up the great work!", "Try more advanced topics to challenge yourself."],
+      recommendations: [
+        "Keep up the great work!",
+        "Try more advanced quizzes to challenge yourself.",
+      ],
       questions: {},
       analyzedAt: new Date().toISOString(),
     };
@@ -131,14 +131,15 @@ Return a strict, valid JSON object matching this schema:
 }
 `;
 
-  // Try gemini-2.0-flash, fallback to gemini-1.5-flash
-  const models = ["gemini-2.0-flash", "gemini-1.5-flash"];
+  const models = ["gemini-3.6-flash", "gemini-3.7-flash", "gemini-flash-latest"];
   let lastError: Error | null = null;
 
   for (const model of models) {
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(
+          apiKey
+        )}`,
         {
           method: "POST",
           headers: {
@@ -161,13 +162,15 @@ Return a strict, valid JSON object matching this schema:
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        const errorMessage = errorData?.error?.message || `HTTP error ${response.status}: ${response.statusText}`;
+        const errorMessage =
+          errorData?.error?.message ||
+          `HTTP error ${response.status}: ${response.statusText}`;
 
         if (response.status === 400 && errorMessage.toLowerCase().includes("api_key")) {
-          throw new Error("INVALID_API_KEY: The provided Gemini API Key is invalid. Please check and re-enter your key.");
+          throw new Error("Invalid Gemini API Key in configuration.");
         }
         if (response.status === 429) {
-          throw new Error("RATE_LIMIT: Gemini API rate limit exceeded. Please wait a moment or try another API key.");
+          throw new Error("Gemini rate limit reached. Please try again in a few moments.");
         }
 
         throw new Error(errorMessage);
@@ -202,7 +205,8 @@ Return a strict, valid JSON object matching this schema:
           questionsMap[item.questionId || key] = {
             questionId: item.questionId || key,
             conceptOrTopic: item.conceptOrTopic || "Concept Review",
-            correctAnswerExplanation: item.correctAnswerExplanation || "No explanation provided.",
+            correctAnswerExplanation:
+              item.correctAnswerExplanation || "No explanation provided.",
             whyChosenWasWrong: item.whyChosenWasWrong || "Incorrect choice.",
             keyTakeaway: item.keyTakeaway || "Review this topic carefully.",
           };
@@ -210,19 +214,25 @@ Return a strict, valid JSON object matching this schema:
       }
 
       return {
-        overallFeedback: parsed.overallFeedback || "AI analysis of your mistakes completed.",
-        recommendations: Array.isArray(parsed.recommendations) ? parsed.recommendations : [],
+        overallFeedback:
+          parsed.overallFeedback || "AI analysis of your mistakes completed.",
+        recommendations: Array.isArray(parsed.recommendations)
+          ? parsed.recommendations
+          : [],
         questions: questionsMap,
         analyzedAt: new Date().toISOString(),
       };
     } catch (err: unknown) {
       const error = err instanceof Error ? err : new Error(String(err));
       lastError = error;
-      // If it was an invalid key or rate limit, no need to retry with another model
-      if (error.message.includes("INVALID_API_KEY") || error.message.includes("RATE_LIMIT")) {
+      // If it was an invalid key or rate limit, do not cycle through other models
+      if (
+        error.message.includes("Invalid Gemini API Key") ||
+        error.message.includes("rate limit")
+      ) {
         throw error;
       }
-      console.warn(`Attempt with ${model} failed, trying next model if available...`, error);
+      console.warn(`Attempt with ${model} failed, trying fallback model...`, error);
     }
   }
 

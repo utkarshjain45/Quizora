@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,7 +20,6 @@ import {
   analyzeWrongAnswersWithGemini,
   hasGeminiApiKey,
 } from "@/api/gemini";
-import { GeminiApiKeyModal } from "@/components/GeminiApiKeyModal";
 import {
   BarChart3,
   CheckCircle2,
@@ -33,7 +33,6 @@ import {
   Award,
   BookOpen,
   Sparkles,
-  KeyRound,
   Lightbulb,
   RotateCcw,
 } from "lucide-react";
@@ -50,7 +49,6 @@ export function QuizResult() {
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<QuizAiAnalysisResult | null>(null);
-  const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(
     location.pathname.endsWith("/analysis")
   );
@@ -123,8 +121,9 @@ export function QuizResult() {
 
   const handleAnalyseWithAI = async () => {
     if (!hasGeminiApiKey()) {
-      setIsKeyModalOpen(true);
-      toast.info("Please configure your Gemini API key to enable AI analysis.");
+      toast.error(
+        "AI analysis is currently unavailable. (VITE_GEMINI_API_KEY is not configured in .env)"
+      );
       return;
     }
 
@@ -184,24 +183,10 @@ export function QuizResult() {
     } catch (err: unknown) {
       const error = err instanceof Error ? err : new Error(String(err));
       console.error("Gemini AI Analysis error:", error);
-      if (
-        error.message.includes("GEMINI_KEY_MISSING") ||
-        error.message.includes("INVALID_API_KEY")
-      ) {
-        toast.error(error.message || "Invalid Gemini API Key. Please update your key.", {
-          id: toastId,
-        });
-        setIsKeyModalOpen(true);
-      } else if (error.message.includes("RATE_LIMIT")) {
-        toast.error("Gemini rate limit reached. Please try again in a few moments.", {
-          id: toastId,
-        });
-      } else {
-        toast.error(
-          error.message || "Failed to generate AI analysis. Please check your API key.",
-          { id: toastId }
-        );
-      }
+      toast.error(
+        error.message || "Failed to generate AI analysis. Please try again.",
+        { id: toastId }
+      );
     } finally {
       setAiLoading(false);
     }
@@ -367,18 +352,6 @@ export function QuizResult() {
                 <Sparkles className={`h-4 w-4 ${aiLoading ? "animate-spin" : "animate-pulse"}`} />
                 {aiLoading ? "Analyzing with AI..." : "Analyse with AI"}
               </Button>
-            </div>
-
-            {/* Gemini Key Config Link */}
-            <div className="flex justify-center items-center gap-2 pt-1 text-xs text-muted-foreground">
-              <button
-                type="button"
-                onClick={() => setIsKeyModalOpen(true)}
-                className="inline-flex items-center gap-1.5 hover:text-foreground underline underline-offset-4 decoration-dotted transition-colors"
-              >
-                <KeyRound className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-                {hasGeminiApiKey() ? "Gemini API Key Configured" : "Configure Gemini API Key for AI"}
-              </button>
             </div>
           </CardContent>
         </Card>
@@ -805,13 +778,6 @@ export function QuizResult() {
           </div>
         )}
       </div>
-
-      {/* Gemini API Key Configuration Modal */}
-      <GeminiApiKeyModal
-        isOpen={isKeyModalOpen}
-        onClose={() => setIsKeyModalOpen(false)}
-        onKeySaved={handleAnalyseWithAI}
-      />
     </div>
   );
 }
