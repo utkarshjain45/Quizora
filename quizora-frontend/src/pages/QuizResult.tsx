@@ -13,6 +13,13 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import type { QuizAttemptResponse, QuizAnalysisResponse } from "@/types/quiz";
+import type { QuizAiAnalysisResult } from "@/types/ai";
+import {
+  extractWrongQuestions,
+  analyzeWrongAnswersWithGemini,
+  hasGeminiApiKey,
+} from "@/api/gemini";
+import { GeminiApiKeyModal } from "@/components/GeminiApiKeyModal";
 import {
   BarChart3,
   CheckCircle2,
@@ -25,6 +32,10 @@ import {
   X,
   Award,
   BookOpen,
+  Sparkles,
+  KeyRound,
+  Lightbulb,
+  RotateCcw,
 } from "lucide-react";
 
 export function QuizResult() {
@@ -37,6 +48,9 @@ export function QuizResult() {
   const [analysis, setAnalysis] = useState<QuizAnalysisResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState<QuizAiAnalysisResult | null>(null);
+  const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(
     location.pathname.endsWith("/analysis")
   );
@@ -88,7 +102,7 @@ export function QuizResult() {
       try {
         const analysisRes = await getQuizAnalysis(quizCode);
         setAnalysis(analysisRes.data);
-      } catch (error: any) {
+      } catch {
         toast.error("Failed to load test analysis. Please try again.");
         setAnalysisLoading(false);
         return;
@@ -104,6 +118,92 @@ export function QuizResult() {
       setTimeout(() => {
         analysisRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
+    }
+  };
+
+  const handleAnalyseWithAI = async () => {
+    if (!hasGeminiApiKey()) {
+      setIsKeyModalOpen(true);
+      toast.info("Please configure your Gemini API key to enable AI analysis.");
+      return;
+    }
+
+    let currentAnalysis = analysis;
+    if (!currentAnalysis && quizCode) {
+      setAnalysisLoading(true);
+      try {
+        const analysisRes = await getQuizAnalysis(quizCode);
+        currentAnalysis = analysisRes.data;
+        setAnalysis(currentAnalysis);
+      } catch {
+        toast.error("Failed to load quiz data for AI analysis.");
+        setAnalysisLoading(false);
+        return;
+      } finally {
+        setAnalysisLoading(false);
+      }
+    }
+
+    if (!currentAnalysis) {
+      toast.error("Quiz analysis data not available.");
+      return;
+    }
+
+    // Strictly extract only the questions the user got wrong
+    const wrongQuestions = extractWrongQuestions(currentAnalysis.questions);
+
+    if (wrongQuestions.length === 0) {
+      toast.success(
+        "🎉 Great job! You have no wrong answers to analyze. Perfect score on all attempted questions!"
+      );
+      return;
+    }
+
+    // Open analysis view and focus specifically on wrong answers
+    setShowAnalysis(true);
+    setFilter("wrong");
+    setAiLoading(true);
+
+    const toastId = toast.loading(
+      `AI is analyzing ${wrongQuestions.length} wrong ${
+        wrongQuestions.length === 1 ? "answer" : "answers"
+      } with Gemini...`
+    );
+
+    try {
+      const result = await analyzeWrongAnswersWithGemini(
+        wrongQuestions,
+        currentAnalysis.quizTitle
+      );
+      setAiAnalysis(result);
+      toast.success("AI analysis completed successfully!", { id: toastId });
+
+      setTimeout(() => {
+        analysisRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 150);
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      console.error("Gemini AI Analysis error:", error);
+      if (
+        error.message.includes("GEMINI_KEY_MISSING") ||
+        error.message.includes("INVALID_API_KEY")
+      ) {
+        toast.error(error.message || "Invalid Gemini API Key. Please update your key.", {
+          id: toastId,
+        });
+        setIsKeyModalOpen(true);
+      } else if (error.message.includes("RATE_LIMIT")) {
+        toast.error("Gemini rate limit reached. Please try again in a few moments.", {
+          id: toastId,
+        });
+      } else {
+        toast.error(
+          error.message || "Failed to generate AI analysis. Please check your API key.",
+          { id: toastId }
+        );
+      }
+    } finally {
+      setAiLoading(false);
     }
   };
 
@@ -232,21 +332,22 @@ export function QuizResult() {
               </p>
             </div>
 
-            {/* Buttons: Back to Dashboard & Analyze Test */}
-            <div className="flex flex-col sm:flex-row justify-center gap-3 pt-2">
+            {/* Buttons: Back to Dashboard, Analyze Test, and Analyse with AI */}
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-3 pt-2">
               <Button
                 variant="outline"
                 onClick={() => navigate("/")}
-                className="w-full sm:w-auto px-6"
+                className="w-full sm:w-auto px-5"
               >
                 Back to Dashboard
               </Button>
               <Button
                 onClick={handleToggleAnalysis}
                 disabled={analysisLoading}
-                className="w-full sm:w-auto px-6 flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 shadow-md"
+                variant="secondary"
+                className="w-full sm:w-auto px-5 flex items-center justify-center gap-2 border border-border shadow-sm"
               >
-                <BarChart3 className="h-4 w-4" />
+                <BarChart3 className="h-4 w-4 text-primary" />
                 {analysisLoading
                   ? "Loading Analysis..."
                   : showAnalysis
@@ -258,6 +359,26 @@ export function QuizResult() {
                   <ChevronDown className="h-4 w-4 ml-1" />
                 )}
               </Button>
+              <Button
+                onClick={handleAnalyseWithAI}
+                disabled={aiLoading}
+                className="w-full sm:w-auto px-6 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 via-indigo-600 to-primary hover:from-purple-700 hover:via-indigo-700 hover:to-primary/90 text-white shadow-md hover:shadow-lg transition-all"
+              >
+                <Sparkles className={`h-4 w-4 ${aiLoading ? "animate-spin" : "animate-pulse"}`} />
+                {aiLoading ? "Analyzing with AI..." : "Analyse with AI"}
+              </Button>
+            </div>
+
+            {/* Gemini Key Config Link */}
+            <div className="flex justify-center items-center gap-2 pt-1 text-xs text-muted-foreground">
+              <button
+                type="button"
+                onClick={() => setIsKeyModalOpen(true)}
+                className="inline-flex items-center gap-1.5 hover:text-foreground underline underline-offset-4 decoration-dotted transition-colors"
+              >
+                <KeyRound className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                {hasGeminiApiKey() ? "Gemini API Key Configured" : "Configure Gemini API Key for AI"}
+              </button>
             </div>
           </CardContent>
         </Card>
@@ -276,7 +397,26 @@ export function QuizResult() {
                 </p>
               </div>
 
-              {/* Filter Tabs */}
+              {/* AI Trigger in Header */}
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  onClick={handleAnalyseWithAI}
+                  disabled={aiLoading}
+                  className="bg-gradient-to-r from-purple-600 via-indigo-600 to-primary hover:from-purple-700 hover:via-indigo-700 hover:to-primary/90 text-white text-xs gap-1.5 shadow-sm"
+                >
+                  <Sparkles className={`h-3.5 w-3.5 ${aiLoading ? "animate-spin" : ""}`} />
+                  {aiLoading
+                    ? "AI Analyzing..."
+                    : aiAnalysis
+                      ? "Re-analyse with AI"
+                      : "Analyse with AI"}
+                </Button>
+              </div>
+            </div>
+
+            {/* Filter Tabs Row */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap gap-1.5 p-1 bg-secondary rounded-lg border border-border">
                 <button
                   type="button"
@@ -328,6 +468,88 @@ export function QuizResult() {
                 )}
               </div>
             </div>
+
+            {/* AI Loading Banner */}
+            {aiLoading && (
+              <Card className="border-2 border-purple-500/30 bg-purple-500/5 p-6 text-center space-y-3 animate-pulse">
+                <div className="mx-auto w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                  <Sparkles className="h-6 w-6 animate-spin" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">
+                    Gemini AI is analyzing your wrong answers...
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Identifying mistakes, formulating explanations for the correct answers, and extracting key takeaways.
+                  </p>
+                </div>
+              </Card>
+            )}
+
+            {/* AI Diagnostic Assessment Card */}
+            {aiAnalysis && !aiLoading && (
+              <Card className="border-2 border-purple-500/30 bg-gradient-to-br from-purple-500/5 via-background to-indigo-500/5 shadow-md overflow-hidden animate-in fade-in duration-300">
+                <CardHeader className="pb-3 border-b border-purple-500/10 bg-purple-500/[0.03]">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                        <Sparkles className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg font-bold">
+                          AI Diagnostic Assessment
+                        </CardTitle>
+                        <CardDescription className="text-xs">
+                          Targeted analysis for your wrong quiz answers
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="outline"
+                        className="bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/30 text-[11px]"
+                      >
+                        Gemini AI
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleAnalyseWithAI}
+                        className="h-7 text-xs text-muted-foreground hover:text-foreground gap-1"
+                      >
+                        <RotateCcw className="h-3 w-3" />
+                        Re-run
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="text-sm text-foreground/90 pt-3 leading-relaxed">
+                    {aiAnalysis.overallFeedback}
+                  </p>
+                </CardHeader>
+
+                {aiAnalysis.recommendations?.length > 0 && (
+                  <CardContent className="pt-3 pb-4 space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <Lightbulb className="h-3.5 w-3.5 text-amber-500" />
+                      Key Study Recommendations:
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {aiAnalysis.recommendations.map((rec, i) => (
+                        <div
+                          key={i}
+                          className="flex items-start gap-2.5 bg-background/80 p-3 rounded-lg border border-border/70 text-xs text-foreground/90 shadow-2xs"
+                        >
+                          <span className="w-5 h-5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
+                            {i + 1}
+                          </span>
+                          <span className="leading-relaxed">{rec}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            )}
 
             {/* Questions List */}
             {filteredQuestions.length === 0 ? (
@@ -481,6 +703,80 @@ export function QuizResult() {
                             * You skipped this question. The correct answer is highlighted above.
                           </p>
                         )}
+
+                        {/* AI Breakdown for Wrong Answer */}
+                        {aiAnalysis?.questions[q.questionId] && (
+                          <div className="mt-4 pt-4 border-t border-purple-500/20 bg-purple-500/[0.03] -mx-6 -mb-6 p-4 sm:p-5 rounded-b-xl space-y-3 animate-in fade-in duration-200">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 text-purple-700 dark:text-purple-300 font-semibold text-sm">
+                                <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                                AI Analysis & Clarification
+                              </div>
+                              {aiAnalysis.questions[q.questionId].conceptOrTopic && (
+                                <Badge
+                                  variant="outline"
+                                  className="bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/30 text-xs font-normal"
+                                >
+                                  {aiAnalysis.questions[q.questionId].conceptOrTopic}
+                                </Badge>
+                              )}
+                            </div>
+
+                            {/* Why the Correct Answer is Right */}
+                            <div className="p-3.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs sm:text-sm space-y-1">
+                              <div className="font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                                Why the Correct Answer is Right:
+                              </div>
+                              <p className="text-emerald-950 dark:text-emerald-100 leading-relaxed pl-5 text-xs sm:text-sm">
+                                {aiAnalysis.questions[q.questionId].correctAnswerExplanation}
+                              </p>
+                            </div>
+
+                            {/* Why Your Selection Was Wrong */}
+                            <div className="p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-xs sm:text-sm space-y-1">
+                              <div className="font-semibold text-rose-800 dark:text-rose-300 flex items-center gap-1.5">
+                                <XCircle className="h-4 w-4 text-rose-600 shrink-0" />
+                                Why Your Selection Was Incorrect:
+                              </div>
+                              <p className="text-rose-950 dark:text-rose-100 leading-relaxed pl-5 text-xs sm:text-sm">
+                                {aiAnalysis.questions[q.questionId].whyChosenWasWrong}
+                              </p>
+                            </div>
+
+                            {/* Key Takeaway */}
+                            {aiAnalysis.questions[q.questionId].keyTakeaway && (
+                              <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs sm:text-sm flex items-start gap-2">
+                                <Lightbulb className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                                <div className="text-amber-950 dark:text-amber-100">
+                                  <span className="font-semibold text-amber-800 dark:text-amber-300 mr-1.5">
+                                    Key Takeaway:
+                                  </span>
+                                  {aiAnalysis.questions[q.questionId].keyTakeaway}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Prompt to analyze with AI if not yet run */}
+                        {!q.isCorrect &&
+                          !q.isUnattempted &&
+                          !aiAnalysis?.questions[q.questionId] && (
+                            <div className="pt-2 flex justify-end">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleAnalyseWithAI}
+                                disabled={aiLoading}
+                                className="text-xs text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 gap-1.5"
+                              >
+                                <Sparkles className="h-3.5 w-3.5" />
+                                Analyse this mistake with AI
+                              </Button>
+                            </div>
+                          )}
                       </CardContent>
                     </Card>
                   );
@@ -509,6 +805,13 @@ export function QuizResult() {
           </div>
         )}
       </div>
+
+      {/* Gemini API Key Configuration Modal */}
+      <GeminiApiKeyModal
+        isOpen={isKeyModalOpen}
+        onClose={() => setIsKeyModalOpen(false)}
+        onKeySaved={handleAnalyseWithAI}
+      />
     </div>
   );
 }
