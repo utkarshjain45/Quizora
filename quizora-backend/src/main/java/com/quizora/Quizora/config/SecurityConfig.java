@@ -25,7 +25,7 @@ public class SecurityConfig {
                 .cors(cors -> {})
                 .authorizeHttpRequests(
                         auth ->
-                                auth.requestMatchers("/api/v1/auth/**").permitAll()
+                                auth.requestMatchers("/api/v1/auth/**", "/health", "/health/**").permitAll()
                                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
